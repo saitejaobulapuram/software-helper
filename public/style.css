@@ -1,0 +1,311 @@
+:root {
+    --bg-dark: #000000;
+    --text-primary: #ffffff;
+    --text-sec: #cccccc;
+    --neon-blue: #00f3ff;
+    --neon-red: #ff073a;
+    --glass-bg: rgba(10, 10, 10, 0.4);
+    /* clearer glass so background shows through */
+    --glass-border: rgba(255, 255, 255, 0.1);
+    --nav-transparent: rgba(0, 0, 0, 0.5);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Inter', sans-serif;
+}
+
+body {
+    background-color: var(--bg-dark);
+    color: var(--text-primary);
+    overflow-x: hidden;
+    line-height: 1.6;
+}
+
+h1,
+h2,
+.logo {
+    font-family: 'Outfit', sans-serif;
+}
+
+/* NAVBAR */
+.navbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    padding: 24px 48px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--nav-transparent);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    z-index: 1000;
+    transition: padding 0.3s ease, border-bottom 0.3s ease;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.logo {
+    font-size: clamp(1.4rem, 4vw, 1.8rem);
+    font-weight: 800;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+.neon-text-logo {
+    color: #ffffff;
+}
+
+.neon-red {
+    color: var(--neon-red);
+}
+
+.neon-blue {
+    color: var(--neon-blue);
+}
+
+.nav-links {
+    display: flex;
+    gap: 30px;
+    align-items: center;
+}
+
+.nav-links a {
+    text-decoration: none;
+    font-size: 1rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-login {
+    color: var(--text-sec);
+}
+
+.btn-login:hover {
+    color: var(--neon-blue);
+}
+
+/* NAVIGATION BUTTONS */
+.neon-btn {
+    background: transparent;
+    color: #fff;
+    border: 1px solid var(--neon-blue);
+    padding: 10px 28px;
+    border-radius: 5px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-family: 'Outfit', sans-serif;
+    font-weight: 600;
+    font-size: 0.9rem;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    display: inline-block;
+    text-decoration: none;
+}
+
+.neon-btn:hover {
+    background: var(--neon-blue);
+    color: var(--bg-dark);
+    transform: translateY(-2px);
+}
+
+.btn-large {
+    padding: 18px 48px;
+    font-size: 1.1rem;
+    border-color: var(--neon-red);
+}
+
+.btn-large:hover {
+    background: var(--neon-red);
+}
+
+.mt-4 {
+    margin-top: 25px;
+}
+
+/* CANVAS BACKGROUND WITH OVERLAY */
+.canvas-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100vh;
+    z-index: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    pointer-events: none;
+}
+
+#scroll-canvas {
+    width: 100vw;
+    height: 100vh;
+    object-fit: cover;
+    opacity: 0.9;
+    /* Increased opacity for absolute clarity of animations */
+}
+
+.overlay-gradient {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    /* Keep edges dark to contrast with text, but center very transparent */
+    background: radial-gradient(circle at center, rgba(0, 0, 0, 0.1) 0%, rgba(0, 0, 0, 0.85) 100%);
+    z-index: 1;
+}
+
+/* CONTENT SECTIONS */
+.content-wrapper {
+    position: relative;
+    z-index: 10;
+}
+
+.scroll-section {
+    min-height: 100vh;
+    padding: 0 10vw;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.text-content {
+    max-width: 550px;
+    background: var(--glass-bg);
+    padding: 50px;
+    border-radius: 12px;
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border: 1px solid var(--glass-border);
+    position: relative;
+    overflow: hidden;
+}
+
+/* Sharp Accent line instead of blurry glow */
+.text-content::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background: var(--neon-blue);
+}
+
+.align-right .text-content::before {
+    left: auto;
+    right: 0;
+    width: 4px;
+    background: var(--neon-red);
+}
+
+h1 {
+    font-size: clamp(2.5rem, 6vw + 1rem, 4.5rem);
+    font-weight: 800;
+    line-height: 1.05;
+    margin-bottom: 20px;
+    letter-spacing: -1.5px;
+}
+
+h2 {
+    font-size: clamp(1.8rem, 5vw + 0.5rem, 3.5rem);
+    font-weight: 800;
+    line-height: 1.1;
+    margin-bottom: 20px;
+    letter-spacing: -1px;
+}
+
+.clean-text {
+    color: #fff;
+}
+
+p {
+    font-size: 1.15rem;
+    color: var(--text-sec);
+    font-weight: 300;
+    line-height: 1.8;
+}
+
+.align-left {
+    align-items: flex-start;
+}
+
+.align-right {
+    align-items: flex-end;
+}
+
+.align-right .text-content {
+    text-align: right;
+}
+
+.center-align {
+    align-items: center;
+    text-align: center;
+}
+
+.center-align .text-content {
+    max-width: 900px;
+    background: transparent;
+    border: none;
+    backdrop-filter: none;
+    padding: 0;
+}
+
+.center-align .text-content::before {
+    display: none;
+}
+
+.center-align h2 {
+    font-size: 4.5rem;
+}
+
+/* REVEAL ANIMATIONS */
+.reveal {
+    opacity: 0;
+    transform: translateY(40px);
+    transition: all 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.reveal.active {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* RESPONSIVE DESIGN */
+/* Large Tablets / Small Laptops */
+@media (max-width: 1200px) {
+    .scroll-section { padding: 0 8vw; }
+    .navbar { padding: 20px 30px; }
+}
+
+/* Tablets */
+@media (max-width: 992px) {
+    .navbar { padding: 15px 25px; }
+    .scroll-section { padding: 0 6vw; }
+}
+
+/* Mobiles Large */
+@media (max-width: 768px) {
+    p { font-size: 1.05rem; }
+    
+    .scroll-section { padding: 0 5vw; align-items: center; }
+
+    .text-content, .align-right .text-content {
+        text-align: center; max-width: 100%; padding: 35px 20px;
+    }
+    .text-content::before { display: none; }
+
+    .navbar { padding: 15px; flex-direction: column; gap: 15px; }
+}
+
+/* Mobiles Small */
+@media (max-width: 480px) {
+    .text-content, .align-right .text-content { padding: 25px 15px; }
+    .neon-btn { padding: 8px 20px; font-size: 0.8rem; }
+}

@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Dashboard - Software Helper</title>
+    <!-- Base premium dark theme and fonts -->
+    <link rel="stylesheet" href="style.css?v=2">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    
+    <style>
+        body { background-color: var(--bg-dark); color: var(--text-primary); overflow-x: hidden; padding-top: 100px; }
+        .dashboard-nav { background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(15px); border-bottom: 1px solid rgba(0, 243, 255, 0.2); }
+        .dash-nav-links { display: flex; gap: 20px; align-items: center; }
+        .dash-btn { background: transparent; color: #fff; border: 1px solid rgba(255,255,255,0.2); padding: 8px 20px; border-radius: 8px; font-family: 'Outfit', sans-serif; font-size: 0.9rem; cursor: pointer; transition: all 0.3s ease; text-decoration: none; }
+        .dash-btn:hover { border-color: var(--neon-blue); box-shadow: 0 0 10px rgba(0, 243, 255, 0.2); color: var(--neon-blue); }
+        .dash-btn.primary { background: rgba(0, 243, 255, 0.1); border-color: var(--neon-blue); color: #fff; }
+        .dash-btn.primary:hover { background: var(--neon-blue); color: #000; }
+        .dashboard-container { max-width: 1400px; margin: 0 auto; padding: 20px 40px; }
+        .dash-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; }
+        .dash-header h1 { font-size: clamp(2rem, 5vw, 3rem); margin: 0; line-height: 1.2; }
+        .dash-header p { color: var(--text-sec); font-size: 1.1rem; }
+        .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 30px; }
+        .product-card { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 16px; overflow: hidden; transition: all 0.4s ease; display: flex; flex-direction: column; position: relative; }
+        .product-card:hover { transform: translateY(-5px); border-color: rgba(0, 243, 255, 0.5); box-shadow: 0 10px 30px rgba(0, 243, 255, 0.15); }
+        .video-wrapper { width: 100%; height: 220px; background: #000; position: relative; overflow: hidden; }
+        .video-wrapper video { width: 100%; height: 100%; object-fit: cover; opacity: 0.8; transition: opacity 0.3s ease; }
+        .product-card:hover .video-wrapper video { opacity: 1; }
+        .product-info { padding: 25px; display: flex; flex-direction: column; flex: 1; }
+        .product-title { font-size: 1.5rem; font-family: 'Outfit', sans-serif; font-weight: 600; margin-bottom: 10px; color: #fff; }
+        .product-desc { font-size: 0.95rem; color: var(--text-sec); line-height: 1.5; margin-bottom: 20px; flex: 1; }
+        .product-meta { display: flex; justify-content: space-between; margin-bottom: 20px; font-size: 0.85rem; background: rgba(255,255,255,0.03); padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); }
+        .meta-item { display: flex; flex-direction: column; align-items: center; }
+        .meta-label { color: rgba(255,255,255,0.4); margin-bottom: 4px; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 1px; }
+        .meta-val { color: #fff; font-weight: 600; }
+        .meta-val.price { color: var(--neon-blue); font-size: 1.1rem; }
+        .product-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .btn-card { width: 100%; text-align: center; padding: 12px; border-radius: 8px; font-size: 0.95rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease; background: transparent; font-family: 'Inter', sans-serif; }
+        .btn-customize { border: 1px solid rgba(255, 255, 255, 0.2); color: #fff; }
+        .btn-customize:hover { border-color: #fff; background: rgba(255,255,255,0.05); }
+        .btn-add-cart { background: rgba(0, 243, 255, 0.1); border: 1px solid var(--neon-blue); color: #fff; }
+        .btn-add-cart:hover { background: var(--neon-blue); color: #000; box-shadow: 0 0 15px rgba(0, 243, 255, 0.4); }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(8px); z-index: 2000; display: flex; justify-content: center; align-items: center; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; }
+        .modal-overlay.active { opacity: 1; pointer-events: all; }
+        .modal-card { width: 90%; max-width: 600px; background: #111; border: 1px solid rgba(0, 243, 255, 0.3); border-radius: 16px; padding: 30px; transform: translateY(20px) scale(0.95); transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); box-shadow: 0 20px 50px rgba(0,0,0,0.8); }
+        .modal-overlay.active .modal-card { transform: translateY(0) scale(1); }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .modal-header h2 { font-size: 1.8rem; margin: 0; }
+        .btn-close { background: transparent; border: none; color: rgba(255,255,255,0.5); font-size: 2rem; cursor: pointer; }
+        .btn-close:hover { color: var(--neon-red); }
+        .modal-body label { display: block; margin-bottom: 10px; color: var(--text-sec); }
+        .modal-body textarea { width: 100%; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 15px; color: #fff; font-family: 'Inter', sans-serif; min-height: 120px; resize: vertical; margin-bottom: 20px; }
+        .modal-body textarea:focus { outline: none; border-color: var(--neon-blue); }
+        .toast { position: fixed; bottom: 30px; right: 30px; background: var(--neon-blue); color: #000; padding: 15px 25px; border-radius: 8px; font-weight: 600; box-shadow: 0 10px 30px rgba(0, 243, 255, 0.3); transform: translateY(100px); opacity: 0; transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); z-index: 3000; }
+        .toast.show { transform: translateY(0); opacity: 1; }
+        @media (max-width: 768px) { .dash-header { flex-direction: column; align-items: flex-start; gap: 15px; } .dash-nav-links { display: none; } .mobile-menu-bar { display: flex; overflow-x: auto; gap: 10px; padding-bottom: 10px; margin-top: 15px; width: 100%; } .dashboard-container { padding: 15px 20px; } .product-grid { grid-template-columns: 1fr; } }
+        @media (max-width: 480px) { .dashboard-container { padding: 10px 15px; } .mobile-menu-bar { gap: 5px; flex-wrap: wrap; } .dash-btn { padding: 6px 15px; font-size: 0.8rem; } .product-card { border-radius: 12px; } .product-info { padding: 15px; } }
+        @media (min-width: 769px) { .mobile-menu-bar { display: none; } }
+    </style>
+</head>
+<body>
+    <nav class="navbar dashboard-nav">
+        <div class="logo">
+            <span class="neon-text-logo">Software <span class="neon-red">Helper</span></span>
+        </div>
+        <div class="dash-nav-links">
+            <a href="profile.html" class="dash-btn">Profile</a>
+            <a href="orders.html" class="dash-btn">Orders</a>
+            <a href="cart.html" class="dash-btn primary">Cart (<span id="cart-count">0</span>)</a>
+            <button id="btn-logout" class="dash-btn" style="border-color: var(--neon-red); color: var(--neon-red);">Logout</button>
+        </div>
+    </nav>
+
+    <div class="mobile-menu-bar" style="padding: 0 20px; margin-top: -10px; margin-bottom: 20px;">
+        <a href="profile.html" class="dash-btn">Profile</a>
+        <a href="orders.html" class="dash-btn">Orders</a>
+        <a href="cart.html" class="dash-btn primary">Cart (<span id="cart-count-mobile">0</span>)</a>
+    </div>
+
+    <main class="dashboard-container">
+        <div class="dash-header">
+            <div>
+                <h1>Project <span class="neon-blue">Marketplace</span></h1>
+                <p>Browse, customize, and deploy elite digital experiences.</p>
+            </div>
+        </div>
+        <div class="product-grid" id="product-container">
+            <p>Loading active projects from the live database...</p>
+        </div>
+    </main>
+
+    <div class="modal-overlay" id="customize-modal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h2>Customize <span class="neon-blue" id="modal-product-name">Product</span></h2>
+                <button class="btn-close" id="btn-close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p style="color: var(--text-sec); margin-bottom: 20px; font-size: 0.95rem;">
+                    Describe any specific themes, features, or content changes you need. 
+                </p>
+                <label for="customization-notes">Your Requirements</label>
+                <textarea id="customization-notes" placeholder="E.g., I want a dark red theme instead of blue..."></textarea>
+                <button class="btn-card btn-add-cart" id="btn-save-customization">Save & Add to Cart</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="cart-toast">Added to Cart!</div>
+
+    <script type="module">
+        import { auth, db } from "./firebase-config.js";
+        import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+        import { doc, setDoc, updateDoc, arrayUnion, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+        let currentUser = null;
+        let cart = [];
+        let remoteProducts = [];
+
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                currentUser = user;
+                onSnapshot(doc(db, "users", user.uid), (docSnap) => {
+                    if (docSnap.exists()) {
+                        cart = docSnap.data().cart || [];
+                        document.getElementById('cart-count').textContent = cart.length;
+                        document.getElementById('cart-count-mobile').textContent = cart.length;
+                    }
+                }, (error) => {
+                    console.error("Firestore Error Fetching Cart. Check Firestore Rules:", error);
+                });
+            } else {
+                window.location.href = "login.html";
+            }
+        });
+
+        document.getElementById('btn-logout').addEventListener('click', () => {
+            signOut(auth).then(() => window.location.href = "login.html");
+        });
+
+        const container = document.getElementById('product-container');
+        onSnapshot(collection(db, "projects"), (snapshot) => {
+            remoteProducts = [];
+            container.innerHTML = ''; 
+
+            if (snapshot.empty) {
+                container.innerHTML = '<p style="color:var(--text-sec);">No projects available in Firestore. Add some in the Admin Panel.</p>';
+                return;
+            }
+
+            snapshot.forEach(docSnap => {
+                const prod = docSnap.data();
+                prod.id = docSnap.id;
+                remoteProducts.push(prod);
+
+                const card = document.createElement('div');
+                card.className = 'product-card';
+                card.innerHTML = `
+                    <div class="video-wrapper"><video src="${prod.videoUrl}" autoplay muted loop playsinline></video></div>
+                    <div class="product-info">
+                        <h3 class="product-title">${prod.title}</h3>
+                        <p class="product-desc">${prod.desc}</p>
+                        <div class="product-meta">
+                            <div class="meta-item"><span class="meta-label">Delivery</span><span class="meta-val">${prod.period}</span></div>
+                            <div class="meta-item"><span class="meta-label">Rating</span><span class="meta-val">${prod.rating}</span></div>
+                            <div class="meta-item"><span class="meta-label">Price</span><span class="meta-val price">${prod.price}</span></div>
+                        </div>
+                        <div class="product-actions">
+                            <button class="btn-card btn-customize" onclick="openCustomizeModal('${prod.id}')">Customize</button>
+                            <button class="btn-card btn-add-cart" onclick="addToCart('${prod.id}')">Order Now</button>
+                        </div>
+                    </div>`;
+                container.appendChild(card);
+            });
+        }, (error) => {
+            container.innerHTML = `<p style="color:var(--neon-red);">Firestore Read Error: ${error.message} - Please check Firebase Rules.</p>`;
+        });
+
+        const modal = document.getElementById('customize-modal');
+        const btnClose = document.getElementById('btn-close-modal');
+        const notesInput = document.getElementById('customization-notes');
+        let activeProductId = null;
+
+        window.openCustomizeModal = (id) => {
+            activeProductId = id;
+            document.getElementById('modal-product-name').textContent = remoteProducts.find(p => p.id === id).title;
+            notesInput.value = ''; 
+            modal.classList.add('active');
+        };
+
+        btnClose.addEventListener('click', () => modal.classList.remove('active'));
+
+        window.addToCart = async (id, customNotes = '') => {
+            if (!currentUser) return;
+            const prod = remoteProducts.find(p => p.id === id);
+            const cartItem = { productId: prod.id, title: prod.title, price: prod.priceNum, customNotes: customNotes, addedAt: new Date().toISOString() };
+            const userRef = doc(db, "users", currentUser.uid);
+
+            try {
+                await updateDoc(userRef, { cart: arrayUnion(cartItem) });
+            } catch(e) {
+                try {
+                    // Initialize if missing
+                    await setDoc(userRef, { cart: [cartItem] }, { merge: true });
+                } catch(error2) {
+                    alert("Error updating Cart in Firestore. Please check Firestore Rules!");
+                    console.error(error2);
+                    return;
+                }
+            }
+
+            const toast = document.getElementById('cart-toast');
+            toast.textContent = customNotes ? 'Customized Product Added to Cart!' : 'Product Added to Cart!';
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        };
+
+        document.getElementById('btn-save-customization').addEventListener('click', () => {
+            const notes = notesInput.value.trim();
+            if(!notes) { alert("Please enter notes or close the modal."); return; }
+            window.addToCart(activeProductId, notes);
+            modal.classList.remove('active');
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Software Helper - Premium Web Solutions</title>
+    <meta name="description"
+        content="Software Helper provides premium websites, stunning neon animations, and high-end tech solutions.">
+    <!-- Using highly aesthetic modern fonts like Outfit and Inter -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Inter:wght@300;400;600;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="style.css?v=3">
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="logo">
+            <span class="neon-text-logo">Software <span class="neon-red">Helper</span></span>
+        </div>
+        <div class="nav-links">
+            <a href="login.html" class="btn-login-register neon-btn">Login / Register</a>
+        </div>
+    </nav>
+
+    <div class="canvas-container">
+        <canvas id="scroll-canvas"></canvas>
+        <div class="overlay-gradient"></div>
+    </div>
+    <main class="content-wrapper">
+        <section class="scroll-section align-left">
+            <br><br><br><br><br><br>
+            <div class="text-content reveal">
+                <h1>Next-Gen <br> <span class="neon-blue">Digital Experiences</span></h1>
+                <p>We build high-end, dynamic software solutions and websites. Elevate your brand with premium
+                    aesthetics and unparalleled performance.</p>
+                <a href="dashboard.html" class="btn-primary neon-btn mt-4">Discover More</a>
+            </div>
+        </section>
+
+        <section class="scroll-section align-right">
+            <div class="text-content reveal">
+                <h2>Stunning Designs,<br><span class="neon-red">Unmatched Innovation</span></h2>
+                <p>From sleek landing pages to enterprise-grade web applications, our expert engineers deliver top-tier
+                    quality that dominates the digital space.</p>
+            </div>
+        </section>
+
+        <section class="scroll-section align-left">
+            <div class="text-content reveal">
+                <h2>Immersive <br> <span class="neon-blue">Animations</span></h2>
+                <p>Engage your audience with meticulously crafted interactions. Every scroll, hover, and click is
+                    designed to captivate and thrill.</p>
+            </div>
+        </section>
+
+        <section class="scroll-section align-right">
+            <div class="text-content reveal">
+                <h2>Lightning Fast <br> <span class="neon-red">Delivery</span></h2>
+                <p>In the digital world, speed is everything. We deploy cutting-edge, ultra-performant platforms in
+                    record time to keep you ahead of the curve.</p>
+            </div>
+        </section>
+
+        <section class="scroll-section center-align">
+            <div class="text-content cta reveal">
+                <h2 class="clean-text">Ready to redefine your digital presence?</h2>
+                <a href="login.html" class="btn-primary neon-btn btn-large">Start Your Project Now</a>
+            </div>
+        </section>
+    </main>
+
+    <script>
+// --- INLINED SCRIPT FROM SCRIPT.JS ---
+const canvas = document.getElementById("scroll-canvas");
+const context = canvas.getContext("2d");
+
+// Configuration for frame sequence
+const frameCount = 192;
+const currentFrame = (index) => {
+    // Frames are 1-indexed, frontpadded with zeroes to 5 digits, e.g. 00001.jpg
+    return `keyboard imgs/${index.toString().padStart(5, '0')}.jpg`;
+};
+
+// Set canvas dimensions
+canvas.width = 1920;
+canvas.height = 1080;
+
+// Resize canvas dynamically to fit window while keeping aspect ratio
+function resizeCanvas() {
+    const windowRatio = window.innerWidth / window.innerHeight;
+    const canvasRatio = canvas.width / canvas.height;
+}
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
+
+const preloadedImages = [];
+
+// Preload the first frame immediately for quick render
+const img = new Image();
+img.src = currentFrame(1);
+img.onload = () => {
+    drawImageCover(context, img, canvas.width, canvas.height);
+};
+
+// Preload all remaining frames in the background
+function preloadAllImages() {
+    for (let i = 1; i <= frameCount; i++) {
+        const image = new Image();
+        image.src = currentFrame(i);
+        preloadedImages.push(image);
+    }
+}
+
+// Ensure the image behaves exactly like background-size: cover
+function drawImageCover(ctx, img, canvasWidth, canvasHeight) {
+    const imgRatio = img.width / img.height;
+    const canvasRatio = canvasWidth / canvasHeight;
+
+    let drawWidth, drawHeight, offsetX, offsetY;
+
+    if (canvasRatio > imgRatio) {
+        drawWidth = canvasWidth;
+        drawHeight = canvasWidth / imgRatio;
+        offsetX = 0;
+        offsetY = (canvasHeight - drawHeight) / 2;
+    } else {
+        drawHeight = canvasHeight;
+        drawWidth = canvasHeight * imgRatio;
+        offsetX = (canvasWidth - drawWidth) / 2;
+        offsetY = 0;
+    }
+
+    ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+    ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
+}
+
+// Scroll Event Handler for Canvas
+window.addEventListener("scroll", () => {  
+    const scrollTop = document.documentElement.scrollTop;
+    const maxScrollTop = document.documentElement.scrollHeight - window.innerHeight;
+    
+    if(maxScrollTop <= 0) return;
+
+    const scrollFraction = scrollTop / maxScrollTop;
+    const frameIndex = Math.min(
+        frameCount - 1,
+        Math.floor(scrollFraction * frameCount)
+    );
+    
+    if(preloadedImages[frameIndex] && preloadedImages[frameIndex].complete) {
+        requestAnimationFrame(() => {
+            drawImageCover(context, preloadedImages[frameIndex], canvas.width, canvas.height);
+        });
+    } else {
+        const tempImg = new Image();
+        tempImg.src = currentFrame(frameIndex + 1);
+        tempImg.onload = () => {
+             requestAnimationFrame(() => {
+                 drawImageCover(context, tempImg, canvas.width, canvas.height);
+             });
+        }
+    }
+});
+
+// Kick off preloading
+preloadAllImages();
+
+// ------------------------------------------------------------------
+// INTERSECTION OBSERVER FOR REVEAL ANIMATIONS
+// ------------------------------------------------------------------
+document.addEventListener("DOMContentLoaded", () => {
+    const reveals = document.querySelectorAll('.reveal');
+
+    const revealOptions = {
+        threshold: 0.15,
+        rootMargin: "0px 0px -50px 0px"
+    };
+
+    const revealOnScroll = new IntersectionObserver(function(
+        entries,
+        observer
+    ) {
+        entries.forEach(entry => {
+            if (!entry.isIntersecting) {
+                return;
+            } else {
+                entry.target.classList.add('active');
+                // observer.unobserve(entry.target); // Un-comment to only animate once
+            }
+        });
+    }, revealOptions);
+
+    reveals.forEach(reveal => {
+        revealOnScroll.observe(reveal);
+    });
+
+    // Trigger check immediately in case some elements are already in view
+    setTimeout(() => {
+        reveals.forEach(reveal => {
+            const rect = reveal.getBoundingClientRect();
+            if(rect.top < window.innerHeight - 50) {
+                reveal.classList.add('active');
+            }
+        });
+    }, 100);
+});
+    </script>
+</body>
+
+</html>

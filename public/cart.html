@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Cart - Software Helper</title>
+    <link rel="stylesheet" href="style.css?v=2">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <style>
+        body { background-color: var(--bg-dark); color: var(--text-primary); padding-top: 100px; overflow-x: hidden; }
+        .dashboard-nav { background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(15px); border-bottom: 1px solid rgba(0, 243, 255, 0.2); }
+        .container { max-width: 1000px; margin: 0 auto; padding: 40px; }
+        .page-header { margin-bottom: 40px; }
+        .page-header h1 { font-size: clamp(2rem, 5vw, 3.5rem); margin: 0; line-height: 1.1; }
+        .cart-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 40px; }
+        .cart-items { display: flex; flex-direction: column; gap: 20px; }
+        .cart-item { background: var(--glass-bg); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 16px; padding: 25px; display: flex; justify-content: space-between; align-items: center; }
+        .item-details h3 { font-size: 1.4rem; margin-bottom: 5px; font-family: 'Outfit', sans-serif; }
+        .item-details p { font-size: 0.9rem; color: var(--text-sec); margin: 0; }
+        .item-price { font-size: 1.4rem; font-weight: 600; color: var(--neon-blue); font-family: 'Outfit', sans-serif; }
+        .btn-remove { background: transparent; color: var(--neon-red); border: 1px solid var(--neon-red); padding: 8px 16px; border-radius: 6px; cursor: pointer; transition: all 0.3s; margin-top: 15px; }
+        .btn-remove:hover { background: rgba(255, 7, 58, 0.1); }
+        .order-summary { background: rgba(10, 10, 10, 0.8); border: 1px solid var(--neon-blue); border-radius: 16px; padding: 30px; height: fit-content; position: sticky; top: 120px; }
+        .order-summary h2 { font-size: 1.6rem; margin-bottom: 20px; }
+        .summary-row { display: flex; justify-content: space-between; margin-bottom: 15px; color: var(--text-sec); }
+        .summary-total { display: flex; justify-content: space-between; margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); font-size: 1.5rem; font-weight: 800; color: #fff; font-family: 'Outfit', sans-serif; }
+        .btn-checkout { width: 100%; padding: 15px; background: rgba(0, 243, 255, 0.1); color: #fff; border: 1px solid var(--neon-blue); font-size: 1.1rem; font-weight: 600; border-radius: 8px; margin-top: 25px; cursor: pointer; transition: all 0.3s; }
+        .btn-checkout:hover { background: var(--neon-blue); color: #000; }
+        .empty-cart { text-align: center; padding: 50px; color: var(--text-sec); }
+        @media (max-width: 992px) { .cart-grid { grid-template-columns: 1fr; } }
+        @media (max-width: 768px) { .container { padding: 20px; } .cart-item { flex-direction: column; align-items: flex-start; gap: 15px; padding: 15px; } .btn-remove { width: 100%; } }
+        @media (max-width: 480px) { .container { padding: 15px; } .order-summary { padding: 20px; } }
+    </style>
+</head>
+<body>
+    <nav class="navbar dashboard-nav">
+        <div class="logo"><span class="neon-text-logo">Software <span class="neon-red">Helper</span></span></div>
+        <div class="nav-links"><a href="dashboard.html" class="neon-btn" style="border-color: rgba(255,255,255,0.2);">← Back to Projects</a></div>
+    </nav>
+    <div class="container">
+        <div class="page-header">
+            <h1>Your <span class="neon-blue">Cart</span></h1>
+            <p style="color:var(--text-sec);">Review and proceed to order your customized websites.</p>
+        </div>
+        <div class="cart-grid">
+            <div class="cart-items" id="cart-items-container"><div class="empty-cart">Loading cart...</div></div>
+            <div class="order-summary">
+                <h2>Order Summary</h2>
+                <div class="summary-row"><span>Subtotal</span><span id="subtotal">$0</span></div>
+                <div class="summary-row"><span>Taxes</span><span id="taxes">$0</span></div>
+                <div class="summary-total"><span>Total</span><span id="total" class="neon-blue">$0</span></div>
+                <button class="btn-checkout" id="btn-checkout" disabled>Proceed to Checkout</button>
+            </div>
+        </div>
+    </div>
+    <script type="module">
+        import { auth, db } from "./firebase-config.js";
+        import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+        import { doc, onSnapshot, arrayRemove, arrayUnion, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        let currentUser = null;
+        let cartArray = [];
+        onAuthStateChanged(auth, (user) => {
+            if (user) { currentUser = user; loadCart(user); } 
+            else { window.location.href = "login.html"; }
+        });
+        function loadCart(user) {
+            const userRef = doc(db, "users", user.uid);
+            onSnapshot(userRef, (docSnap) => {
+                if(docSnap.exists()) {
+                    cartArray = docSnap.data().cart || [];
+                    renderCart();
+                }
+            }, (error) => {
+                const container = document.getElementById('cart-items-container');
+                container.innerHTML = `<div class="empty-cart" style="color:var(--neon-red);">Firestore Permission Error: Cannot access Cart Details. Ensure Firebase rules allow reads.</div>`;
+            });
+        }
+        function renderCart() {
+            const container = document.getElementById('cart-items-container');
+            const subtotalEl = document.getElementById('subtotal');
+            const taxesEl = document.getElementById('taxes');
+            const totalEl = document.getElementById('total');
+            const btnCheckout = document.getElementById('btn-checkout');
+            if(cartArray.length === 0) {
+                container.innerHTML = '<div class="empty-cart">Your cart is completely empty. <br><br> <a href="dashboard.html" style="color:var(--neon-blue);">Start browsing</a> projects.</div>';
+                subtotalEl.textContent = "$0"; taxesEl.textContent = "$0"; totalEl.textContent = "$0";
+                btnCheckout.disabled = true;
+                return;
+            }
+            container.innerHTML = ''; let subtotal = 0;
+            cartArray.forEach(item => {
+                subtotal += item.price;
+                const div = document.createElement('div');
+                div.className = 'cart-item';
+                div.innerHTML = `
+                    <div class="item-details">
+                        <h3>${item.title}</h3>
+                        <p><strong>Customizations:</strong> ${item.customNotes || 'None'}</p>
+                        <button class="btn-remove" onclick="removeCartItem('${item.addedAt}')">Remove Item</button>
+                    </div>
+                    <div class="item-price">$${item.price}</div>
+                `;
+                container.appendChild(div);
+            });
+            const taxes = subtotal * 0.05; 
+            const total = subtotal + taxes;
+            subtotalEl.textContent = '$' + subtotal.toFixed(2);
+            taxesEl.textContent = '$' + taxes.toFixed(2);
+            totalEl.textContent = '$' + total.toFixed(2);
+            btnCheckout.disabled = false;
+        }
+        window.removeCartItem = async (uniqueTimestamp) => {
+            const itemToRemove = cartArray.find(i => i.addedAt === uniqueTimestamp);
+            if(itemToRemove && currentUser) {
+                try {
+                    await updateDoc(doc(db, "users", currentUser.uid), { cart: arrayRemove(itemToRemove) });
+                } catch(e) {
+                    alert("Error removing item: " + e.message);
+                }
+            }
+        };
+        document.getElementById('btn-checkout').addEventListener('click', async () => {
+            if(!currentUser || cartArray.length === 0) return;
+            const btn = document.getElementById('btn-checkout');
+            btn.textContent = "Processing...";
+            
+            try {
+                const userRef = doc(db, "users", currentUser.uid);
+                const newOrders = cartArray.map(item => ({...item, status: 'In Development', orderedAt: new Date().toISOString()}));
+                await updateDoc(userRef, { cart: [], orders: arrayUnion(...newOrders) });
+                window.location.href = "orders.html";
+            } catch(e) {
+                console.error("Checkout Error:", e);
+                alert("Checkout failed: " + e.message + (e.code==='permission-denied'?' (Check Firebase Rules)':''));
+                btn.textContent = "Proceed to Checkout";
+            }
+        });
+    </script>
+</body>
+</html>

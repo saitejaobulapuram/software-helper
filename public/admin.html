@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Software Helper</title>
+    <!-- Base premium dark theme and fonts -->
+    <link rel="stylesheet" href="style.css?v=2">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    
+    <style>
+        body { background-color: var(--bg-dark); color: var(--text-primary); margin: 0; padding: 0; display: flex; height: 100vh; overflow: hidden; }
+        .admin-sidebar { width: 280px; background: rgba(10, 10, 10, 0.95); border-right: 1px solid rgba(0, 243, 255, 0.1); display: flex; flex-direction: column; transition: all 0.3s ease; z-index: 100; }
+        .sidebar-header { padding: 25px 30px; border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
+        .sidebar-header h2 { font-size: 1.5rem; margin: 0; letter-spacing: 1px; line-height: 1.2; }
+        .sidebar-nav { flex: 1; padding: 30px 0; display: flex; flex-direction: column; gap: 10px; }
+        .nav-item { padding: 15px 30px; color: var(--text-sec); font-size: 1.1rem; font-family: 'Outfit', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.3s ease; position: relative; text-decoration: none; display: flex; align-items: center; }
+        .nav-item:hover { color: #fff; background: rgba(255, 255, 255, 0.02); }
+        .nav-item.active { color: var(--neon-blue); background: rgba(0, 243, 255, 0.05); }
+        .nav-item.active::before { content: ''; position: absolute; left: 0; top: 0; height: 100%; width: 4px; background: var(--neon-blue); box-shadow: 0 0 10px var(--neon-blue); }
+        .sidebar-footer { padding: 20px 30px; border-top: 1px solid rgba(255, 255, 255, 0.05); }
+        .btn-logout { width: 100%; padding: 12px; background: transparent; border: 1px solid var(--neon-red); color: var(--neon-red); border-radius: 8px; font-family: 'Outfit', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.3s ease; }
+        .btn-logout:hover { background: rgba(255, 7, 58, 0.1); box-shadow: 0 0 15px rgba(255, 7, 58, 0.4); }
+        .admin-main { flex: 1; display: flex; flex-direction: column; background: linear-gradient(135deg, var(--bg-dark) 0%, #111 100%); overflow-y: auto; position: relative; }
+        .top-navbar { height: 80px; padding: 0 40px; display: flex; justify-content: space-between; align-items: center; background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(10px); border-bottom: 1px solid rgba(255, 255, 255, 0.05); position: sticky; top: 0; z-index: 50; }
+        .top-navbar h1 { font-size: 1.8rem; margin: 0; }
+        .admin-profile { display: flex; align-items: center; gap: 15px; }
+        .admin-avatar { width: 40px; height: 40px; border-radius: 50%; background: var(--neon-blue); display: flex; justify-content: center; align-items: center; color: #000; font-weight: 800; font-family: 'Outfit', sans-serif; }
+        .content-area { padding: 40px; max-width: 1400px; margin: 0 auto; width: 100%; }
+        .admin-view { display: none; animation: fadeIn 0.4s ease forwards; }
+        .admin-view.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 25px; margin-bottom: 40px; }
+        .stat-card { background: var(--glass-bg); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 16px; padding: 25px; display: flex; flex-direction: column; position: relative; overflow: hidden; }
+        .stat-card::before { content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%; background: var(--neon-blue); }
+        .stat-card.red::before { background: var(--neon-red); }
+        .stat-card.purple::before { background: #b000ff; }
+        .stat-value { font-size: 2.5rem; font-family: 'Outfit', sans-serif; font-weight: 800; color: #fff; margin-bottom: 5px; line-height: 1; }
+        .stat-label { color: var(--text-sec); font-size: 0.95rem; text-transform: uppercase; letter-spacing: 1px; }
+        .data-card { background: var(--glass-bg); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 16px; padding: 30px; margin-bottom: 30px; }
+        .data-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+        .data-header h3 { font-size: 1.5rem; margin: 0; color: #fff; }
+        .btn-action { background: rgba(0, 243, 255, 0.1); color: var(--neon-blue); border: 1px solid var(--neon-blue); padding: 8px 16px; border-radius: 6px; font-size: 0.9rem; cursor: pointer; transition: all 0.3s; }
+        .btn-action:hover { background: var(--neon-blue); color: #000; }
+        table { width: 100%; border-collapse: collapse; text-align: left; }
+        thead tr { border-bottom: 1px solid rgba(255, 255, 255, 0.1); }
+        th { color: var(--text-sec); font-weight: 600; padding: 15px 10px; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 1px; }
+        td { padding: 15px 10px; color: #fff; border-bottom: 1px solid rgba(255, 255, 255, 0.03); font-size: 0.95rem; }
+        tbody tr:hover { background: rgba(255, 255, 255, 0.02); }
+        .status-badge { padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.5px; }
+        .status-badge.active { background: rgba(0, 243, 255, 0.15); color: var(--neon-blue); }
+        .status-badge.pending { background: rgba(255, 170, 0, 0.15); color: #ffaa00; }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(8px); z-index: 2000; display: flex; justify-content: center; align-items: center; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; }
+        .modal-overlay.active { opacity: 1; pointer-events: all; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; color: var(--text-sec); font-size: 0.9rem; }
+        .form-group input, .form-group textarea { width: 100%; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #fff; padding: 10px; border-radius: 6px; box-sizing: border-box; }
+        @media (max-width: 992px) { .admin-sidebar { position: fixed; left: -280px; height: 100vh; } .admin-sidebar.open { left: 0; } .mobile-toggle { display: block; } .top-navbar { padding: 0 20px; } .content-area { padding: 20px; } }
+        @media (max-width: 768px) { .stats-grid { grid-template-columns: 1fr; } table, thead, tbody, th, td, tr { display: block; } thead tr { position: absolute; top: -9999px; left: -9999px; } tr { border: 1px solid rgba(255,255,255,0.1); margin-bottom: 15px; border-radius: 8px; padding: 10px; background: rgba(255,255,255,0.02); } td { border: none; border-bottom: 1px solid rgba(255,255,255,0.05); position: relative; padding-left: 40%; text-align: right; font-size: 0.9rem; } td:before { position: absolute; top: 15px; left: 10px; width: 35%; padding-right: 10px; white-space: nowrap; color: var(--text-sec); text-align: left; font-weight: 600; content: attr(data-label); font-size: 0.8rem; } }
+        @media (max-width: 480px) { .top-navbar h1 { font-size: 1.4rem; } .content-area { padding: 15px; } .data-card { padding: 20px; } td { padding-left: 50%; } td:before { width: 45%; } .data-header { flex-direction: column; align-items: flex-start; gap: 10px; } .btn-action { width: 100%; text-align: center; } }
+    </style>
+</head>
+<body>
+    <aside class="admin-sidebar" id="sidebar">
+        <div class="sidebar-header"><h2 class="neon-text-logo">Admin <span class="neon-red">Panel</span></h2></div>
+        <nav class="sidebar-nav">
+            <a class="nav-item active" data-target="view-dashboard">Overview</a>
+            <a class="nav-item" data-target="view-users">Users Management</a>
+            <a class="nav-item" data-target="view-projects">Website Projects</a>
+            <a class="nav-item" data-target="view-orders">Client Carts / Orders</a>
+        </nav>
+        <div class="sidebar-footer">
+            <button class="btn-logout" id="btn-admin-logout">Sign Out</button>
+        </div>
+    </aside>
+
+    <main class="admin-main">
+        <header class="top-navbar">
+            <button class="mobile-toggle" id="mobile-menu-btn" style="background:transparent;border:none;color:#fff;font-size:1.5rem;display:none;">☰</button>
+            <h1 id="top-title">Overview</h1>
+            <div class="admin-profile"><span style="color: var(--text-sec); font-size: 0.9rem;">Admin</span><div class="admin-avatar">A</div></div>
+        </header>
+
+        <div class="content-area">
+            <div id="view-dashboard" class="admin-view active">
+                <div class="stats-grid">
+                    <div class="stat-card"><div class="stat-value" id="stat-users">0</div><div class="stat-label">Total Users</div></div>
+                    <div class="stat-card purple"><div class="stat-value" id="stat-projects">0</div><div class="stat-label">Active Projects</div></div>
+                    <div class="stat-card red"><div class="stat-value" id="stat-orders">0</div><div class="stat-label">Cart Items / Orders</div></div>
+                </div>
+                <div class="data-card"><div class="data-header"><h3>System Status</h3></div><p style="color: var(--text-sec);" id="system-status">Live connection to Firestore established. Listening for database updates...</p></div>
+            </div>
+
+            <div id="view-users" class="admin-view">
+                <div class="data-card">
+                    <div class="data-header"><h3>Registered Users</h3></div>
+                    <table>
+                        <thead><tr><th>Name</th><th>Email</th><th>Mobile</th><th>Role</th><th>Action</th></tr></thead>
+                        <tbody id="users-table-body"><tr><td colspan="5" style="text-align:center;">Loading users...</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="view-projects" class="admin-view">
+                <div class="data-card">
+                    <div class="data-header"><h3>Manage Websites For Sale</h3><button class="btn-action" id="btn-add-project">+ Add New Project</button></div>
+                    <table>
+                        <thead><tr><th>Title</th><th>Price</th><th>Delivery</th><th>Rating</th><th>Action</th></tr></thead>
+                        <tbody id="projects-table-body"><tr><td colspan="5" style="text-align:center;">Loading projects...</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="view-orders" class="admin-view">
+                <div class="data-card">
+                    <div class="data-header"><h3>Client Orders (Carts)</h3></div>
+                    <table>
+                        <thead><tr><th>Client Email</th><th>Product</th><th>Amount</th><th>Customization Notes</th><th>Status</th><th>Action</th></tr></thead>
+                        <tbody id="orders-table-body"><tr><td colspan="6" style="text-align:center;">Loading orders...</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div class="modal-overlay" id="add-project-modal">
+        <div class="data-card" style="width: 90%; max-width: 500px; padding: 30px; margin: 0; box-shadow: 0 20px 50px rgba(0,0,0,0.8);">
+            <div class="data-header"><h3 style="margin-bottom:0;">Add New Website Event</h3><button class="btn-action" id="btn-close-modal" style="background:transparent;border:none;color:#fff;font-size:1.5rem;">&times;</button></div>
+            <form id="add-project-form">
+                <div class="form-group"><label>Title</label><input type="text" id="proj-title" required placeholder="e.g. Next-Gen Portfolio"></div>
+                <div class="form-group"><label>Video URL (MP4)</label><input type="url" id="proj-video" required value="https://www.w3schools.com/html/mov_bbb.mp4"></div>
+                <div class="form-group"><label>Price (Formatted)</label><input type="text" id="proj-price" required placeholder="e.g. $499"></div>
+                <div class="form-group"><label>Numeric Price</label><input type="number" id="proj-priceNum" required placeholder="499"></div>
+                <div class="form-group"><label>Delivery Period</label><input type="text" id="proj-period" required placeholder="e.g. 5 Days"></div>
+                <div class="form-group"><label>Rating</label><input type="text" id="proj-rating" required placeholder="e.g. 4.9/5"></div>
+                <div class="form-group"><label>Description</label><textarea id="proj-desc" required placeholder="Description..."></textarea></div>
+                <button type="submit" class="btn-action" style="width:100%;">Save to Database</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="edit-project-modal">
+        <div class="data-card" style="width: 90%; max-width: 500px; padding: 30px; margin: 0; box-shadow: 0 20px 50px rgba(0,0,0,0.8);">
+            <div class="data-header"><h3 style="margin-bottom:0;">Edit Website Event</h3><button class="btn-action" id="btn-close-edit-modal" style="background:transparent;border:none;color:#fff;font-size:1.5rem;">&times;</button></div>
+            <form id="edit-project-form">
+                <input type="hidden" id="edit-proj-id">
+                <div class="form-group"><label>Title</label><input type="text" id="edit-proj-title" required></div>
+                <div class="form-group"><label>Video URL (MP4)</label><input type="url" id="edit-proj-video" required></div>
+                <div class="form-group"><label>Price (Formatted)</label><input type="text" id="edit-proj-price" required></div>
+                <div class="form-group"><label>Numeric Price</label><input type="number" id="edit-proj-priceNum" required></div>
+                <div class="form-group"><label>Delivery Period</label><input type="text" id="edit-proj-period" required></div>
+                <div class="form-group"><label>Rating</label><input type="text" id="edit-proj-rating" required></div>
+                <div class="form-group"><label>Description</label><textarea id="edit-proj-desc" required></textarea></div>
+                <button type="submit" class="btn-action" style="width:100%;">Update Database</button>
+            </form>
+        </div>
+    </div>
+
+    <script type="module">
+        import { auth, db } from "./firebase-config.js";
+        import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+        import { collection, onSnapshot, addDoc, deleteDoc, doc, updateDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+        const navItems = document.querySelectorAll('.nav-item');
+        const views = document.querySelectorAll('.admin-view');
+        const topTitle = document.getElementById('top-title');
+
+        navItems.forEach(item => {
+            item.addEventListener('click', () => {
+                navItems.forEach(nav => nav.classList.remove('active'));
+                item.classList.add('active');
+                topTitle.textContent = item.textContent;
+                const targetId = item.getAttribute('data-target');
+                views.forEach(view => {
+                    view.classList.remove('active');
+                    if (view.id === targetId) view.classList.add('active');
+                });
+                document.getElementById('sidebar').classList.remove('open');
+            });
+        });
+
+        document.getElementById('mobile-menu-btn').addEventListener('click', () => document.getElementById('sidebar').classList.toggle('open'));
+        document.getElementById('btn-admin-logout').addEventListener('click', () => signOut(auth).then(() => window.location.href = "login.html"));
+
+        const addModal = document.getElementById('add-project-modal');
+        document.getElementById('btn-add-project').addEventListener('click', () => addModal.classList.add('active'));
+        document.getElementById('btn-close-modal').addEventListener('click', (e) => { e.preventDefault(); addModal.classList.remove('active'); });
+
+        document.getElementById('add-project-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = e.target.querySelector('button[type="submit"]');
+            btn.textContent = "Saving...";
+            
+            try {
+                await addDoc(collection(db, "projects"), {
+                    title: document.getElementById('proj-title').value,
+                    videoUrl: document.getElementById('proj-video').value,
+                    price: document.getElementById('proj-price').value,
+                    priceNum: Number(document.getElementById('proj-priceNum').value),
+                    period: document.getElementById('proj-period').value,
+                    rating: document.getElementById('proj-rating').value,
+                    desc: document.getElementById('proj-desc').value,
+                    createdAt: new Date().toISOString()
+                });
+                e.target.reset();
+                addModal.classList.remove('active');
+            } catch (error) {
+                console.error("Firestore Write Error:", error);
+                alert("Error saving project: " + error.message + (error.code === 'permission-denied' ? "\n\nPlease ensure Firebase Firestore Rules allow writes." : ""));
+            } finally {
+                btn.textContent = "Save to Database";
+            }
+        });
+
+        window.deleteProject = async (id) => {
+            if(confirm("Are you sure you want to delete this project?")) {
+                try {
+                    await deleteDoc(doc(db, "projects", id));
+                } catch(error) {
+                    console.error("Delete Error:", error);
+                    alert("Cannot delete: " + error.message);
+                }
+            }
+        }
+
+        onSnapshot(collection(db, "users"), (snapshot) => {
+            let totalUsers = 0; let totalOrders = 0;
+            let usersHTML = ''; let ordersHTML = '';
+
+            snapshot.forEach(docSnap => {
+                const data = docSnap.data();
+                totalUsers++;
+
+                const userObj = encodeURIComponent(JSON.stringify({id: docSnap.id, role: data.role}));
+                usersHTML += `<tr><td data-label="Name">${data.name || 'N/A'}</td><td data-label="Email">${data.email || 'N/A'}</td><td data-label="Mobile">${data.mobile || '---'}</td><td data-label="Role"><span class="status-badge ${data.role === 'admin' ? 'active' : 'pending'}">${data.role || 'user'}</span></td><td data-label="Action"><span style="color:var(--neon-blue); cursor:pointer; margin-right:10px;" onclick="toggleUserRole('${userObj}')">Toggle Role</span> <span style="color:var(--neon-red); cursor:pointer;" onclick="deleteUser('${docSnap.id}')">Delete</span></td></tr>`;
+
+                if (data.cart && data.cart.length > 0) {
+                    data.cart.forEach(cartItem => {
+                        totalOrders++;
+                        const cObj = encodeURIComponent(JSON.stringify(cartItem));
+                        ordersHTML += `<tr><td data-label="Client Email">${data.email}</td><td data-label="Product">${cartItem.title}</td><td data-label="Amount">$${cartItem.price}</td><td data-label="Customization Notes"><span style="color:var(--text-sec); font-size: 0.85rem;">${cartItem.customNotes || 'None'}</span></td><td data-label="Status"><span class="status-badge pending">In Cart</span></td><td data-label="Action"><span style="color:var(--neon-red); cursor:pointer;" onclick="deleteItem('${docSnap.id}', '${cObj}', 'cart')">Delete</span></td></tr>`;
+                    });
+                }
+                if (data.orders && data.orders.length > 0) {
+                    data.orders.forEach(orderItem => {
+                        totalOrders++;
+                        const oObj = encodeURIComponent(JSON.stringify(orderItem));
+                        ordersHTML += `<tr><td data-label="Client Email">${data.email}</td><td data-label="Product">${orderItem.title}</td><td data-label="Amount">$${orderItem.price}</td><td data-label="Customization Notes"><span style="color:var(--text-sec); font-size: 0.85rem;">${orderItem.customNotes || 'None'}</span></td><td data-label="Status"><span class="status-badge active">${orderItem.status || 'Ordered'}</span></td><td data-label="Action"><span style="color:var(--neon-blue); cursor:pointer; margin-right:10px;" onclick="updateOrderStatus('${docSnap.id}', '${oObj}')">Update</span> <span style="color:var(--neon-red); cursor:pointer;" onclick="deleteItem('${docSnap.id}', '${oObj}', 'orders')">Delete</span></td></tr>`;
+                    });
+                }
+            });
+
+            document.getElementById('stat-users').textContent = totalUsers;
+            document.getElementById('stat-orders').textContent = totalOrders;
+            document.getElementById('users-table-body').innerHTML = usersHTML || '<tr><td colspan="4" style="text-align:center;">No users found.</td></tr>';
+            document.getElementById('orders-table-body').innerHTML = ordersHTML || '<tr><td colspan="5" style="text-align:center;">No orders/carts found.</td></tr>';
+        }, (error) => {
+            document.getElementById('system-status').innerHTML = `<span style="color:var(--neon-red);">Firestore Permission Error: ${error.message}</span>`;
+            document.getElementById('users-table-body').innerHTML = `<tr><td colspan="4" style="text-align:center;color:var(--neon-red);">Permission Denied on Users Collection</td></tr>`;
+            document.getElementById('orders-table-body').innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--neon-red);">Permission Denied on Users Collection</td></tr>`;
+        });
+
+        onSnapshot(collection(db, "projects"), (snapshot) => {
+            let projectsHTML = ''; let count = 0;
+            snapshot.forEach(docSnap => {
+                count++; const p = docSnap.data();
+                const pObj = encodeURIComponent(JSON.stringify({...p, id: docSnap.id}));
+                projectsHTML += `<tr><td data-label="Title">${p.title}</td><td data-label="Price">${p.price}</td><td data-label="Delivery">${p.period}</td><td data-label="Rating">${p.rating}</td><td data-label="Action"><span style="color: var(--neon-blue); cursor: pointer; margin-right: 10px;" onclick="editProject('${pObj}')">Edit</span><span style="color: var(--neon-red); cursor: pointer;" onclick="deleteProject('${docSnap.id}')">Delete</span></td></tr>`;
+            });
+            document.getElementById('stat-projects').textContent = count;
+            document.getElementById('projects-table-body').innerHTML = projectsHTML || '<tr><td colspan="5" style="text-align:center;">No projects found. Add one above.</td></tr>';
+        }, (error) => {
+             document.getElementById('projects-table-body').innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--neon-red);">Permission Denied on Projects Collection</td></tr>`;
+        });
+
+        const editModal = document.getElementById('edit-project-modal');
+        document.getElementById('btn-close-edit-modal').addEventListener('click', (e) => { e.preventDefault(); editModal.classList.remove('active'); });
+
+        window.editProject = (pObjStr) => {
+            const p = JSON.parse(decodeURIComponent(pObjStr));
+            document.getElementById('edit-proj-id').value = p.id;
+            document.getElementById('edit-proj-title').value = p.title || '';
+            document.getElementById('edit-proj-video').value = p.videoUrl || '';
+            document.getElementById('edit-proj-price').value = p.price || '';
+            document.getElementById('edit-proj-priceNum').value = p.priceNum || '';
+            document.getElementById('edit-proj-period').value = p.period || '';
+            document.getElementById('edit-proj-rating').value = p.rating || '';
+            document.getElementById('edit-proj-desc').value = p.desc || '';
+            editModal.classList.add('active');
+        };
+
+        document.getElementById('edit-project-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = e.target.querySelector('button[type="submit"]');
+            btn.textContent = "Updating...";
+            const id = document.getElementById('edit-proj-id').value;
+            try {
+                await updateDoc(doc(db, "projects", id), {
+                    title: document.getElementById('edit-proj-title').value,
+                    videoUrl: document.getElementById('edit-proj-video').value,
+                    price: document.getElementById('edit-proj-price').value,
+                    priceNum: Number(document.getElementById('edit-proj-priceNum').value),
+                    period: document.getElementById('edit-proj-period').value,
+                    rating: document.getElementById('edit-proj-rating').value,
+                    desc: document.getElementById('edit-proj-desc').value,
+                });
+                editModal.classList.remove('active');
+            } catch (error) {
+                alert("Error updating project: " + error.message);
+            } finally { btn.textContent = "Update Database"; }
+        });
+
+        window.toggleUserRole = async (userObjStr) => {
+            const u = JSON.parse(decodeURIComponent(userObjStr));
+            const newRole = u.role === 'admin' ? 'user' : 'admin';
+            if(confirm(`Change user role to ${newRole}?`)) {
+                try {
+                    await updateDoc(doc(db, "users", u.id), { role: newRole });
+                } catch(error) { alert("Error changing role: " + error.message); }
+            }
+        };
+
+        window.deleteUser = async (id) => {
+            if(confirm("Delete this user? This action is permanent!")) {
+                try {
+                    await deleteDoc(doc(db, "users", id));
+                } catch(error) { alert("Cannot delete user: " + error.message); }
+            }
+        };
+
+        window.deleteItem = async (userId, itemStr, type) => {
+            if(confirm("Remove this item?")) {
+                const item = JSON.parse(decodeURIComponent(itemStr));
+                try {
+                    const userRef = doc(db, "users", userId);
+                    const userDoc = await getDoc(userRef);
+                    const data = userDoc.data();
+                    let newArr = data[type] || [];
+                    newArr = newArr.filter(i => JSON.stringify(i) !== JSON.stringify(item));
+                    await updateDoc(userRef, { [type]: newArr });
+                } catch(error) { alert("Error deleting: " + error.message); }
+            }
+        };
+
+        window.updateOrderStatus = async (userId, itemStr) => {
+            const newStatus = prompt("Enter new status (e.g., Processing, In Development, Completed):", "In Development");
+            if(newStatus) {
+                const item = JSON.parse(decodeURIComponent(itemStr));
+                try {
+                    const userRef = doc(db, "users", userId);
+                    const userDoc = await getDoc(userRef);
+                    const data = userDoc.data();
+                    let newArr = data.orders || [];
+                    const index = newArr.findIndex(i => JSON.stringify(i) === JSON.stringify(item));
+                    if(index > -1) {
+                        newArr[index].status = newStatus;
+                        await updateDoc(userRef, { orders: newArr });
+                    }
+                } catch(error) { alert("Error updating status: " + error.message); }
+            }
+        };
+
+        onAuthStateChanged(auth, (user) => { if (!user) window.location.href = "login.html"; });
+    </script>
+</body>
+</html>

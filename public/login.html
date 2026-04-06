@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Software Helper | Smart Access Portal</title>
+    <!-- Google Fonts & External Stylesheet (preserved) -->
+    <link rel="stylesheet" href="style.css?v=2">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Inter:wght@300;400;600;800&display=swap"
+        rel="stylesheet">
+    <style>
+        /* ----- GLOBAL RESET & ENHANCED RESPONSIVE FOUNDATION ----- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #050b14;
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+            color: #fff;
+        }
+
+        /* fluid typography for perfect scaling */
+        :root {
+            --neon-blue: #00f3ff;
+            --neon-red: #ff073a;
+            --glass-bg: rgba(10, 20, 30, 0.65);
+            --glass-border: rgba(0, 243, 255, 0.25);
+            --text-sec: rgba(255, 255, 255, 0.7);
+        }
+
+        /* navbar refinement */
+        .navbar {
+            padding: 1rem 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 1000;
+            background: rgba(5, 11, 20, 0.7);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(0, 243, 255, 0.2);
+        }
+
+        .logo {
+            font-size: clamp(1.4rem, 5vw, 2rem);
+            font-weight: 800;
+            font-family: 'Outfit', sans-serif;
+            letter-spacing: -0.5px;
+        }
+
+        .neon-text-logo {
+            background: linear-gradient(135deg, #fff, var(--neon-blue));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .neon-red {
+            color: var(--neon-red);
+            text-shadow: 0 0 5px rgba(255, 7, 58, 0.5);
+        }
+
+        .nav-links a {
+            padding: 0.6rem 1.3rem;
+            border-radius: 40px;
+            background: rgba(0, 243, 255, 0.1);
+            border: 1px solid var(--neon-blue);
+            font-weight: 600;
+            transition: all 0.3s ease;
+            color: #fff;
+        }
+
+        .nav-links a:hover {
+            background: rgba(0, 243, 255, 0.3);
+            box-shadow: 0 0 12px rgba(0, 243, 255, 0.4);
+        }
+
+        /* background canvas responsive */
+        .canvas-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -2;
+            background-size: cover;
+            background-position: center;
+            opacity: 0.22;
+            filter: blur(2px);
+            transition: opacity 0.5s;
+        }
+
+        .overlay-gradient {
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at center, rgba(0, 0, 0, 0.4) 0%, #03060b 100%);
+        }
+
+        /* MAIN AUTH CONTAINER */
+        .auth-wrapper {
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 100px 1.5rem 2rem;
+            position: relative;
+            z-index: 10;
+        }
+
+        /* enhanced card - fully fluid */
+        .auth-card-wide {
+            width: 100%;
+            max-width: 1100px;
+            min-height: 620px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+            border: 1px solid var(--glass-border);
+            border-radius: 2rem;
+            display: flex;
+            flex-direction: row;
+            overflow: hidden;
+            box-shadow: 0 25px 45px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+            transition: transform 0.3s ease, box-shadow 0.3s;
+        }
+
+        /* left pane responsive */
+        .auth-left-pane {
+            flex: 1.2;
+            position: relative;
+            min-height: 380px;
+            background: #000;
+        }
+
+        .carousel-img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0;
+            transform: scale(1.02);
+            transition: opacity 1.4s cubic-bezier(0.2, 0.9, 0.4, 1), transform 7s ease;
+        }
+
+        .carousel-img.active {
+            opacity: 0.75;
+            transform: scale(1);
+        }
+
+        .pane-gradient {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(105deg, rgba(0, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0.7) 100%);
+            z-index: 2;
+        }
+
+        .carousel-overlay-content {
+            position: absolute;
+            bottom: 2rem;
+            left: 2rem;
+            z-index: 5;
+            max-width: 85%;
+            text-shadow: 0 4px 15px rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            background: rgba(0, 0, 0, 0.3);
+            padding: 0.8rem 1.4rem;
+            border-radius: 1rem;
+            border-left: 3px solid var(--neon-blue);
+        }
+
+        .carousel-overlay-content h3 {
+            font-size: clamp(1.6rem, 5vw, 2.6rem);
+            font-weight: 700;
+            font-family: 'Outfit', sans-serif;
+            line-height: 1.2;
+            margin-bottom: 0.25rem;
+        }
+
+        .carousel-overlay-content p {
+            font-size: clamp(0.85rem, 3vw, 1rem);
+            opacity: 0.9;
+        }
+
+        /* right pane - flexible width */
+        .auth-right-pane {
+            width: 460px;
+            max-width: 100%;
+            padding: 2.5rem 2rem;
+            background: rgba(8, 12, 22, 0.7);
+            backdrop-filter: blur(4px);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            z-index: 10;
+        }
+
+        /* toggle buttons responsive */
+        .auth-toggle-buttons {
+            display: flex;
+            background: rgba(0, 0, 0, 0.55);
+            border-radius: 60px;
+            position: relative;
+            margin-bottom: 2rem;
+            padding: 0.4rem;
+        }
+
+        .toggle-btn {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: var(--text-sec);
+            padding: 0.75rem 0.5rem;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            z-index: 2;
+            transition: color 0.3s;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .toggle-btn.active {
+            color: #fff;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            top: 0.4rem;
+            left: 0.4rem;
+            width: calc(50% - 0.4rem);
+            height: calc(100% - 0.8rem);
+            background: linear-gradient(120deg, var(--neon-blue), #0084ff);
+            border-radius: 60px;
+            transition: transform 0.4s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+            z-index: 1;
+            box-shadow: 0 0 8px rgba(0, 243, 255, 0.5);
+        }
+
+        .auth-card-wide.register-mode .toggle-slider {
+            transform: translateX(100%);
+            background: linear-gradient(120deg, var(--neon-red), #ff4d6d);
+        }
+
+        /* form styling */
+        .form-container {
+            position: relative;
+            flex: 1;
+        }
+
+        .auth-form {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            visibility: hidden;
+            opacity: 0;
+            transform: translateX(18px) scale(0.97);
+            transition: all 0.45s cubic-bezier(0.2, 0.9, 0.3, 1.1);
+            pointer-events: none;
+        }
+
+        .auth-form.active {
+            visibility: visible;
+            opacity: 1;
+            transform: translateX(0) scale(1);
+            pointer-events: auto;
+            position: relative;
+        }
+
+        .auth-form h2 {
+            font-size: clamp(1.8rem, 6vw, 2.3rem);
+            margin-bottom: 0.25rem;
+        }
+
+        .subtitle {
+            font-size: 0.9rem;
+            margin-bottom: 1.8rem;
+            opacity: 0.7;
+        }
+
+        .input-group {
+            position: relative;
+            margin-bottom: 1.6rem;
+        }
+
+        .input-group input {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 1rem 1rem;
+            border-radius: 14px;
+            color: #fff;
+            font-size: 1rem;
+            outline: none;
+            transition: all 0.25s;
+        }
+
+        .input-group label {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.95rem;
+            pointer-events: none;
+            transition: 0.2s ease;
+            background: transparent;
+            padding: 0 4px;
+        }
+
+        .input-group input:focus,
+        .input-group input.has-val {
+            border-color: var(--neon-blue);
+            background: rgba(0, 243, 255, 0.05);
+        }
+
+        .input-group input:focus+label,
+        .input-group input.has-val+label {
+            top: 0;
+            font-size: 0.7rem;
+            background: #0a0f1c;
+            color: var(--neon-blue);
+            border-radius: 12px;
+        }
+
+        .focus-border {
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            width: 0;
+            height: 2px;
+            background: var(--neon-blue);
+            transition: 0.3s;
+        }
+
+        .input-group input:focus~.focus-border {
+            width: 80%;
+            left: 10%;
+        }
+
+        .submit-btn {
+            width: 100%;
+            font-size: 1rem;
+            font-weight: 700;
+            padding: 0.9rem;
+            border-radius: 40px;
+            background: rgba(0, 243, 255, 0.12);
+            border: 1px solid var(--neon-blue);
+            color: #fff;
+            cursor: pointer;
+            transition: 0.25s;
+            margin-top: 0.8rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0.6rem;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .submit-btn:hover {
+            background: rgba(0, 243, 255, 0.3);
+            box-shadow: 0 0 16px rgba(0, 243, 255, 0.3);
+            transform: scale(1.01);
+        }
+
+        #form-register .submit-btn {
+            border-color: var(--neon-red);
+            background: rgba(255, 7, 58, 0.12);
+        }
+
+        #form-register .submit-btn:hover {
+            background: rgba(255, 7, 58, 0.3);
+            box-shadow: 0 0 16px rgba(255, 7, 58, 0.4);
+        }
+
+        .spinner {
+            display: none;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .msg-box {
+            font-size: 0.85rem;
+            padding: 0.7rem;
+            border-radius: 14px;
+            margin-bottom: 1rem;
+            display: none;
+            text-align: center;
+            font-weight: 500;
+        }
+
+        .msg-box.error {
+            display: block;
+            background: rgba(255, 7, 58, 0.2);
+            border-left: 4px solid var(--neon-red);
+            color: #ffb3c1;
+        }
+
+        .msg-box.success {
+            display: block;
+            background: rgba(0, 243, 255, 0.15);
+            border-left: 4px solid var(--neon-blue);
+            color: #b0f5ff;
+        }
+
+        .forgot-link {
+            text-align: right;
+            margin-bottom: 1.2rem;
+        }
+
+        .forgot-link a {
+            color: var(--neon-blue);
+            font-size: 0.85rem;
+            text-decoration: none;
+            transition: 0.2s;
+        }
+
+        .forgot-link a:hover {
+            text-shadow: 0 0 6px var(--neon-blue);
+        }
+
+        /* ========= RESPONSIVE BREAKPOINTS (ALL SCREENS) ========= */
+        @media (max-width: 900px) {
+            .auth-card-wide {
+                flex-direction: column;
+                max-width: 550px;
+                min-height: auto;
+            }
+
+            .auth-left-pane {
+                height: 250px;
+                flex: none;
+            }
+
+            .auth-right-pane {
+                width: 100%;
+                padding: 2rem 1.6rem;
+            }
+
+            .pane-gradient {
+                background: linear-gradient(to top, rgba(0, 0, 0, 0.8), transparent);
+            }
+
+            .carousel-overlay-content {
+                bottom: 1rem;
+                left: 1rem;
+                padding: 0.5rem 1rem;
+            }
+
+            .auth-wrapper {
+                padding-top: 90px;
+                padding-bottom: 2rem;
+            }
+        }
+
+        @media (max-width: 550px) {
+            .auth-right-pane {
+                padding: 1.8rem 1.2rem;
+            }
+
+            .toggle-btn {
+                font-size: 0.9rem;
+                padding: 0.6rem 0.3rem;
+            }
+
+            .input-group input {
+                padding: 0.85rem 1rem;
+            }
+
+            .submit-btn {
+                padding: 0.75rem;
+            }
+
+            .carousel-overlay-content h3 {
+                font-size: 1.4rem;
+            }
+
+            .navbar {
+                padding: 0.7rem 5%;
+            }
+
+            .logo {
+                font-size: 1.3rem;
+            }
+        }
+
+        @media (max-width: 380px) {
+            .toggle-slider {
+                top: 0.3rem;
+                height: calc(100% - 0.6rem);
+            }
+
+            .auth-left-pane {
+                height: 210px;
+            }
+
+            .carousel-overlay-content {
+                max-width: 90%;
+            }
+
+            .carousel-overlay-content p {
+                font-size: 0.7rem;
+            }
+        }
+
+        @media (min-width: 1600px) {
+            .auth-card-wide {
+                max-width: 1300px;
+                min-height: 720px;
+            }
+
+            .auth-right-pane {
+                width: 540px;
+                padding: 3rem;
+            }
+
+            .carousel-overlay-content h3 {
+                font-size: 3rem;
+            }
+        }
+
+        /* additional glass polish */
+        .auth-card-wide::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at 30% 20%, rgba(0, 243, 255, 0.08), transparent 70%);
+            pointer-events: none;
+        }
+
+        .neon-blue {
+            color: var(--neon-blue);
+        }
+
+        .neon-red {
+            color: var(--neon-red);
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="logo"><span class="neon-text-logo">Software <span class="neon-red">Helper</span></span></div>
+        <div class="nav-links"><a href="index.html" class="btn-login-register neon-btn"
+                style="text-decoration: none;">🏠 Home</a></div>
+    </nav>
+    <div class="canvas-container" style="background: url('keyboard imgs/00001.jpg') center/cover no-repeat;">
+        <div class="overlay-gradient"></div>
+    </div>
+
+    <main class="auth-wrapper">
+        <div class="auth-card-wide">
+            <div class="auth-left-pane">
+                <img src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=2070&auto=format&fit=crop"
+                    class="carousel-img active" alt="Student Collaboration">
+                <img src="https://images.unsplash.com/photo-1517486808906-6ca8b3f04846?q=80&w=1949&auto=format&fit=crop"
+                    class="carousel-img" alt="Campus Innovation">
+                <img src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=2071&auto=format&fit=crop"
+                    class="carousel-img" alt="Group Study">
+                <img src="https://images.unsplash.com/photo-1541339907198-e08756dedf3f?q=80&w=2070&auto=format&fit=crop"
+                    class="carousel-img" alt="Academic Journey">
+                <div class="pane-gradient"></div>
+                <div class="carousel-overlay-content">
+                    <h3 id="carousel-title">Student <span id="dynamic-highlight" class="neon-blue">Life</span></h3>
+                    <p id="carousel-desc">Experience cutting edge campus solutions.</p>
+                </div>
+            </div>
+
+            <div class="auth-right-pane">
+                <div class="auth-toggle-buttons">
+                    <button id="btn-show-login" class="toggle-btn active">🔐 Login</button>
+                    <button id="btn-show-register" class="toggle-btn">✨ Register</button>
+                    <div class="toggle-slider"></div>
+                </div>
+
+                <div class="form-container">
+                    <form id="form-login" class="auth-form active">
+                        <h2>Welcome <span class="neon-blue">Back</span></h2>
+                        <p class="subtitle">Access your personal dashboard.</p>
+                        <div id="login-msg" class="msg-box"></div>
+                        <div class="input-group">
+                            <input type="text" id="login-identifier" required>
+                            <label for="login-identifier">Email or Mobile Number</label>
+                            <span class="focus-border"></span>
+                        </div>
+                        <div class="input-group">
+                            <input type="password" id="login-password" required>
+                            <label for="login-password">Password</label>
+                            <span class="focus-border"></span>
+                        </div>
+                        <div class="forgot-link">
+                            <a href="forgotpassword.html">Forgot Password?</a>
+                        </div>
+                        <button type="submit" class="submit-btn" id="login-submit-btn">
+                            <span class="btn-text">Login →</span>
+                            <div class="spinner"></div>
+                        </button>
+                    </form>
+
+                    <form id="form-register" class="auth-form">
+                        <h2>Join <span class="neon-red">Us</span></h2>
+                        <p class="subtitle">Unlock exclusive tools & community.</p>
+                        <div id="reg-msg" class="msg-box"></div>
+                        <div class="input-group">
+                            <input type="text" id="reg-name" required>
+                            <label for="reg-name">Full Name</label>
+                            <span class="focus-border"></span>
+                        </div>
+                        <div class="input-group">
+                            <input type="tel" id="reg-mobile" required pattern="[0-9]{10}">
+                            <label for="reg-mobile">Mobile Number (10 digits)</label>
+                            <span class="focus-border"></span>
+                        </div>
+                        <div class="input-group">
+                            <input type="email" id="reg-email" required>
+                            <label for="reg-email">Email Address</label>
+                            <span class="focus-border"></span>
+                        </div>
+                        <div class="input-group">
+                            <input type="password" id="reg-password" required minlength="6">
+                            <label for="reg-password">Password (min 6 chars)</label>
+                            <span class="focus-border"></span>
+                        </div>
+                        <div class="input-group">
+                            <input type="password" id="reg-confirm" required>
+                            <label for="reg-confirm">Confirm Password</label>
+                            <span class="focus-border"></span>
+                        </div>
+                        <button type="submit" class="submit-btn" id="reg-submit-btn">
+                            <span class="btn-text">Create Account ↗</span>
+                            <div class="spinner"></div>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script type="module">
+        import { auth, db } from "./firebase-config.js";
+        import { createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+        import { doc, setDoc, getDoc, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+        // ----- ENHANCED CAROUSEL WITH DYNAMIC TEXT (preserving span styling)-----
+        const images = document.querySelectorAll('.carousel-img');
+        const carouselTitleElem = document.getElementById('carousel-title');
+        const highlightSpan = document.getElementById('dynamic-highlight');
+        const carouselDesc = document.getElementById('carousel-desc');
+
+        // Rich content for each slide (prefix + highlighted word + description)
+        const carouselContent = [
+            { prefix: "Student ", highlight: "Life", desc: "Collaborative spaces, modern tools, and vibrant community." },
+            { prefix: "Collaborative ", highlight: "Learning", desc: "Work smarter with peers & industry mentors." },
+            { prefix: "Campus ", highlight: "Events", desc: "Networking, hackathons, and cultural fests." },
+            { prefix: "Academic ", highlight: "Excellence", desc: "Track progress, earn certifications, shine." }
+        ];
+
+        let currentImgIndex = 0;
+
+        function updateCarouselText(index) {
+            const content = carouselContent[index % carouselContent.length];
+            // preserve the span element for highlight, only change text nodes before and after
+            // we keep the span element intact and modify text nodes
+            const textNodes = [];
+            const walker = document.createTreeWalker(carouselTitleElem, NodeFilter.SHOW_TEXT, null, false);
+            while (walker.nextNode()) textNodes.push(walker.currentNode);
+            // first text node before span
+            if (textNodes.length >= 1 && textNodes[0].nodeValue.trim() !== content.prefix) {
+                textNodes[0].nodeValue = content.prefix;
+            }
+            if (highlightSpan) highlightSpan.innerText = content.highlight;
+            if (carouselDesc) carouselDesc.innerText = content.desc;
+        }
+
+        // rotate images and update content
+        function rotateCarousel() {
+            images[currentImgIndex].classList.remove('active');
+            currentImgIndex = (currentImgIndex + 1) % images.length;
+            images[currentImgIndex].classList.add('active');
+            updateCarouselText(currentImgIndex);
+        }
+
+        // initial sync: set first slide content
+        updateCarouselText(0);
+        setInterval(rotateCarousel, 9000);
+
+        // ----- TOGGLE LOGIC (enhanced with cross-device touch) -----
+        const btnLogin = document.getElementById('btn-show-login');
+        const btnRegister = document.getElementById('btn-show-register');
+        const formLogin = document.getElementById('form-login');
+        const formRegister = document.getElementById('form-register');
+        const authCard = document.querySelector('.auth-card-wide');
+        let currentMode = 'login';
+
+        function switchMode(newMode) {
+            if (newMode === currentMode) return;
+            currentMode = newMode;
+            document.getElementById('login-msg').className = 'msg-box';
+            document.getElementById('reg-msg').className = 'msg-box';
+
+            if (newMode === 'login') {
+                authCard.classList.remove('register-mode');
+                btnLogin.classList.add('active'); btnRegister.classList.remove('active');
+                highlightSpan.className = "neon-blue";
+                formRegister.classList.remove('active');
+                setTimeout(() => { formLogin.classList.add('active'); }, 30);
+            } else {
+                authCard.classList.add('register-mode');
+                btnRegister.classList.add('active'); btnLogin.classList.remove('active');
+                highlightSpan.className = "neon-red";
+                formLogin.classList.remove('active');
+                setTimeout(() => { formRegister.classList.add('active'); }, 30);
+            }
+        }
+
+        btnLogin.addEventListener('click', () => switchMode('login'));
+        btnRegister.addEventListener('click', () => switchMode('register'));
+
+        // Helper UI functions
+        const setFormLoading = (formBtnId, isLoading) => {
+            const btn = document.getElementById(formBtnId);
+            if (!btn) return;
+            const text = btn.querySelector('.btn-text');
+            const spinner = btn.querySelector('.spinner');
+            if (isLoading) { text.style.display = 'none'; spinner.style.display = 'block'; btn.disabled = true; }
+            else { text.style.display = 'block'; spinner.style.display = 'none'; btn.disabled = false; }
+        };
+
+        const showMessage = (elementId, type, message) => {
+            const el = document.getElementById(elementId);
+            el.textContent = message;
+            el.className = `msg-box ${type}`;
+            setTimeout(() => { if (el.className.includes(type)) el.classList.add('show'); }, 10);
+        };
+
+        // Input field tracker for 'has-val'
+        document.querySelectorAll('.input-group input').forEach(input => {
+            input.addEventListener('input', function () {
+                if (this.value.length > 0) this.classList.add('has-val');
+                else this.classList.remove('has-val');
+            });
+            if (input.value.length > 0) input.classList.add('has-val');
+        });
+
+        // ----- LOGIN (fully preserved with enhanced error handling)-----
+        formLogin.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const identifier = document.getElementById('login-identifier').value.trim();
+            const password = document.getElementById('login-password').value;
+            setFormLoading('login-submit-btn', true);
+            try {
+                let currentEmail = identifier;
+                if (!identifier.includes('@') && /^\d{10}$/.test(identifier)) {
+                    const q = query(collection(db, "users"), where("mobile", "==", identifier));
+                    const querySnapshot = await getDocs(q);
+                    if (querySnapshot.empty) throw new Error("No account linked to this mobile number.");
+                    currentEmail = querySnapshot.docs[0].data().email;
+                } else if (!identifier.includes('@')) {
+                    throw new Error("Enter valid email or 10-digit mobile.");
+                }
+                const userCredential = await signInWithEmailAndPassword(auth, currentEmail, password);
+                const userDoc = await getDoc(doc(db, "users", userCredential.user.uid));
+                showMessage('login-msg', 'success', 'Login successful! Redirecting...');
+                setTimeout(() => {
+                    window.location.href = (userDoc.exists() && userDoc.data().role === 'admin') ? 'admin.html' : 'dashboard.html';
+                }, 900);
+            } catch (error) {
+                let errorMsg = error.message || "Authentication failed.";
+                if (error.code === 'auth/invalid-credential') errorMsg = "Invalid email/password.";
+                if (error.code === 'auth/user-not-found') errorMsg = "Account not found.";
+                showMessage('login-msg', 'error', errorMsg);
+            } finally { setFormLoading('login-submit-btn', false); }
+        });
+
+        // ----- REGISTER (robust Firestore write)-----
+        formRegister.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('reg-email').value;
+            const password = document.getElementById('reg-password').value;
+            const confirm = document.getElementById('reg-confirm').value;
+            const name = document.getElementById('reg-name').value;
+            const mobile = document.getElementById('reg-mobile').value;
+
+            if (password !== confirm) {
+                showMessage('reg-msg', 'error', 'Passwords do not match.');
+                return;
+            }
+            if (mobile.length !== 10 || isNaN(mobile)) {
+                showMessage('reg-msg', 'error', 'Mobile must be exactly 10 digits.');
+                return;
+            }
+            setFormLoading('reg-submit-btn', true);
+            try {
+                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                await updateProfile(userCredential.user, { displayName: name });
+                await setDoc(doc(db, "users", userCredential.user.uid), {
+                    name: name, email: email, mobile: mobile, role: "user", createdAt: new Date().toISOString()
+                });
+                showMessage('reg-msg', 'success', 'Account created! Redirecting to dashboard...');
+                setTimeout(() => window.location.href = 'dashboard.html', 1000);
+            } catch (error) {
+                let friendlyMsg = "Registration failed: ";
+                if (error.code === 'auth/email-already-in-use') friendlyMsg = "Email already registered.";
+                else if (error.code === 'auth/weak-password') friendlyMsg = "Password must be at least 6 characters.";
+                else if (error.code === 'permission-denied') friendlyMsg = "Firestore permission denied. Check rules (allow read, write).";
+                else friendlyMsg += error.message;
+                showMessage('reg-msg', 'error', friendlyMsg);
+            } finally { setFormLoading('reg-submit-btn', false); }
+        });
+    </script>
+</body>
+
+</html>

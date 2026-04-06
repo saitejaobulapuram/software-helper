@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Profile - Software Helper</title>
+    <!-- Base premium dark theme and fonts -->
+    <link rel="stylesheet" href="style.css?v=2">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    
+    <style>
+        body { background-color: var(--bg-dark); color: var(--text-primary); padding-top: 100px; overflow-x: hidden; }
+        .dashboard-nav { background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(15px); border-bottom: 1px solid rgba(0, 243, 255, 0.2); }
+        .container { max-width: 800px; margin: 0 auto; padding: 40px; }
+        .page-header { margin-bottom: 40px; display: flex; align-items: center; gap: 20px; }
+        .avatar-large { width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, var(--neon-blue), #b000ff); display: flex; justify-content: center; align-items: center; color: #fff; font-size: 2.5rem; font-family: 'Outfit', sans-serif; font-weight: 800; box-shadow: 0 0 20px rgba(0, 243, 255, 0.3); }
+        .page-header h1 { font-size: clamp(2rem, 5vw, 3rem); margin: 0; line-height: 1.1; }
+        .profile-card { background: var(--glass-bg); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 16px; padding: 40px; box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5); }
+        .form-group { margin-bottom: 25px; position: relative; }
+        .form-group label { display: block; margin-bottom: 8px; color: var(--text-sec); font-size: 0.95rem; font-weight: 600; }
+        .form-group input { width: 100%; background: rgba(0, 0, 0, 0.5); border: 1px solid rgba(255, 255, 255, 0.1); padding: 15px; border-radius: 8px; color: #fff; font-size: 1.05rem; font-family: 'Inter', sans-serif; transition: all 0.3s ease; box-sizing: border-box; }
+        .form-group input:focus { outline: none; border-color: var(--neon-blue); background: rgba(0, 243, 255, 0.05); }
+        .form-group input:disabled { opacity: 0.6; cursor: not-allowed; background: rgba(255,255,255,0.02); border-color: transparent; }
+        .btn-save { padding: 15px 30px; background: rgba(0, 243, 255, 0.1); color: #fff; border: 1px solid var(--neon-blue); font-size: 1.1rem; font-weight: 600; border-radius: 8px; cursor: pointer; transition: all 0.3s; width: 100%; font-family: 'Outfit', sans-serif; margin-top: 10px; }
+        .btn-save:hover { background: var(--neon-blue); color: #000; box-shadow: 0 0 15px rgba(0, 243, 255, 0.4); }
+        .msg-toast { text-align: center; padding: 15px; border-radius: 8px; margin-bottom: 25px; display: none; font-weight: 600; }
+        .msg-success { background: rgba(0, 255, 136, 0.15); color: #00ff88; border: 1px solid rgba(0, 255, 136, 0.3); display: block; }
+        .msg-error { background: rgba(255, 7, 58, 0.15); color: var(--neon-red); border: 1px solid var(--neon-red); display: block; }
+        @media (max-width: 768px) { .container { padding: 20px; } .profile-card { padding: 25px; } .page-header { flex-direction: column; text-align: center; } }
+        @media (max-width: 480px) { .container { padding: 15px; } .profile-card { padding: 20px; } .form-group input { padding: 12px; font-size: 1rem; } .btn-save { padding: 12px 20px; font-size: 1rem; } }
+    </style>
+</head>
+<body>
+    <nav class="navbar dashboard-nav">
+        <div class="logo">
+            <span class="neon-text-logo">Software <span class="neon-red">Helper</span></span>
+        </div>
+        <div class="nav-links">
+            <a href="dashboard.html" class="neon-btn" style="border-color: rgba(255,255,255,0.2);">← Back to Projects</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="page-header">
+            <div class="avatar-large" id="avatar-letter">U</div>
+            <div>
+                <h1>Account <span class="neon-blue">Settings</span></h1>
+                <p style="color:var(--text-sec); margin-top: 5px;">Manage your personal information securely.</p>
+            </div>
+        </div>
+
+        <div class="profile-card">
+            <div id="profile-msg" class="msg-toast"></div>
+            
+            <form id="profile-form">
+                <div class="form-group">
+                    <label>Unique Client ID</label>
+                    <input type="text" id="prof-uid" disabled>
+                </div>
+                
+                <div class="form-group">
+                    <label>Email Address</label>
+                    <input type="email" id="prof-email" disabled>
+                </div>
+                
+                <div class="form-group">
+                    <label>Full Name</label>
+                    <input type="text" id="prof-name" required placeholder="John Doe">
+                </div>
+                
+                <div class="form-group">
+                    <label>Mobile Number</label>
+                    <input type="tel" id="prof-mobile" required pattern="[0-9]{10}" placeholder="1234567890">
+                </div>
+
+                <button type="submit" class="btn-save" id="btn-save">Save Changes</button>
+            </form>
+        </div>
+    </div>
+
+    <script type="module">
+        import { auth, db } from "./firebase-config.js";
+        import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+        import { doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+        let currentUser = null;
+
+        const showMessage = (type, text) => {
+            const msgBox = document.getElementById('profile-msg');
+            msgBox.className = `msg-toast msg-${type}`;
+            msgBox.textContent = text;
+            setTimeout(() => { msgBox.style.display = 'none'; }, 4000);
+        };
+
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                currentUser = user;
+                
+                try {
+                    const userRef = doc(db, "users", user.uid);
+                    const docSnap = await getDoc(userRef);
+                    if(docSnap.exists()) {
+                        const data = docSnap.data();
+                        document.getElementById('prof-uid').value = user.uid;
+                        document.getElementById('prof-email').value = data.email || user.email;
+                        document.getElementById('prof-name').value = data.name || '';
+                        document.getElementById('prof-mobile').value = data.mobile || '';
+                        
+                        if(data.name) {
+                            document.getElementById('avatar-letter').textContent = data.name.charAt(0).toUpperCase();
+                        } else {
+                            document.getElementById('avatar-letter').textContent = user.email.charAt(0).toUpperCase();
+                        }
+                    } else {
+                        // Fallback
+                        document.getElementById('prof-uid').value = user.uid;
+                        document.getElementById('prof-email').value = user.email;
+                        document.getElementById('avatar-letter').textContent = user.email.charAt(0).toUpperCase();
+                    }
+                } catch(error) {
+                    console.error(error);
+                    showMessage('error', "Database Error: Cannot retrieve profile. Check Firestore Security Rules.");
+                }
+            } else {
+                window.location.href = "login.html";
+            }
+        });
+
+        document.getElementById('profile-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if(!currentUser) return;
+
+            const btn = document.getElementById('btn-save');
+            btn.textContent = "Saving...";
+            
+            const newName = document.getElementById('prof-name').value;
+            const newMobile = document.getElementById('prof-mobile').value;
+
+            try {
+                // Using setDoc with merge: true handles both updateDoc and doc creation dynamically
+                await setDoc(doc(db, "users", currentUser.uid), {
+                    name: newName,
+                    mobile: newMobile
+                }, { merge: true });
+
+                document.getElementById('avatar-letter').textContent = newName.charAt(0).toUpperCase();
+                showMessage('success', "Profile updated successfully!");
+            } catch (error) {
+                console.error("Update Error:", error);
+                showMessage('error', "Update failed: " + error.message + (error.code==='permission-denied'?' (Check Firebase Rules)':''));
+            } finally {
+                btn.textContent = "Save Changes";
+            }
+        });
+    </script>
+</body>
+</html>
